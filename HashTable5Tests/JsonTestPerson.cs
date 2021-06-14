@@ -1,4 +1,4 @@
-﻿namespace Q90_HashTables.Tests
+﻿namespace HashTable5Tests.Tests
 {
     public class JsonTestPerson
     {

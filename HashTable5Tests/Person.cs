@@ -1,10 +1,11 @@
-﻿using System;
+﻿using HashTable5;
+using System;
 
-namespace Q90_HashTables
+namespace HashTable5Tests
 {
-    public class Person : IEquatable<Person>
+    public class Person : IEquatable<Person>, IIdable
     {
-        internal int Id { get; set; }   //  for or from DB ie Entity Framework
+        public int Id { get; set; }   //  for or from DB ie Entity Framework
         internal string FirstName { get; set; }
         internal string LastName { get; set; }
         internal string Email { get; set; }

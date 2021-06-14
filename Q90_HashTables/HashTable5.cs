@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("HashTable5Tests")]
-namespace Q90_HashTables
+namespace HashTable5
 {
-    public class HashTable5
+    public class HashTable5<T> where T : class, IEquatable<T>, IIdable
     {
-        //  TODO: Generalize this hashtable class so it is not closely bound to People types
         private const int BLFL = 18;
-        internal List<LinkedList<Tuple<int, Person>>> table { get; set; }
+        internal List<LinkedList<Tuple<int, T>>> table { get; set; }
         internal int BucketLoadFactorLimit { get; private set; } = BLFL;
         internal float CurrentBucketsLF => (float)TotalRecords / (float)LoadedBucketCount;
         internal float CurrentTableLF => (float)LoadedBucketCount / (float)table.Count;
@@ -22,7 +21,7 @@ namespace Q90_HashTables
         /// </summary>
         public HashTable5()
         {
-            table = new List<LinkedList<Tuple<int, Person>>>(16);
+            table = new List<LinkedList<Tuple<int, T>>>(16);
             InitializeBuckets();
             LoadFactorLimit = 0.51f;
         }
@@ -44,7 +43,7 @@ namespace Q90_HashTables
         /// <param name="maxLoadFactor"></param>
         public HashTable5(int capacity, float maxLoadFactor)
         {
-            table = new List<LinkedList<Tuple<int, Person>>>(capacity);
+            table = new List<LinkedList<Tuple<int, T>>>(capacity);
             InitializeBuckets();
             LoadFactorLimit = maxLoadFactor;
         }
@@ -64,7 +63,7 @@ namespace Q90_HashTables
         {
             for (int idx = 0; idx < table.Capacity; idx++)
             {
-                table.Add(new LinkedList<Tuple<int, Person>>());
+                table.Add(new LinkedList<Tuple<int, T>>());
             }
             LoadedBucketCount = 0;
             TotalRecords = 0;
@@ -74,26 +73,26 @@ namespace Q90_HashTables
         /// Add a new Person object to the hashtable. Will not load a duplicate ID, nor an ID of less than 1.
         /// Caller is responsible for disallowing duplicate object loading.
         /// </summary>
-        /// <param name="person"></param>
+        /// <param name="newEntry"></param>
         /// <returns></returns>
-        public bool AddPerson(Person person)
+        public bool AddEntry(T newEntry)
         {
-            if (person.Id < 1)
+            if (newEntry.Id < 1)
             {
                 return false;
             }
-            var hash = HashFunction(person.Id);
-            var newItem = new Tuple<int, Person>(hash, person);
-            LinkedList<Tuple<int, Person>> bucket = null;
+            var hash = HashFunction(newEntry.Id);
+            var newItem = new Tuple<int, T>(hash, newEntry);
+            LinkedList<Tuple<int, T>> bucket = null;
 
             try
             {
-                bucket = table[hash];
+                bucket = this.table[hash];
                 if (bucket.Count < 1)
                 {
                     LoadedBucketCount++;
                 }
-                bucket.AddLast(new LinkedListNode<Tuple<int, Person>>(newItem));
+                bucket.AddLast(new LinkedListNode<Tuple<int, T>>(newItem));
                 TotalRecords++;
                 var checkLF = CheckLF();
                 //  TODO: log the fact that checkLF() was run and the checkLF integer result
@@ -101,12 +100,12 @@ namespace Q90_HashTables
             catch (InvalidOperationException ioe)
             {
                 //  TODO: log this possible specific exception event
-                var errMsg = $"{ ioe.Message }; Entry: { person }";
+                var errMsg = $"{ ioe.Message }; Entry: { newEntry }";
             }
             catch (Exception ex)
             {
                 //  TODO: log this unexpected event
-                var errMsg = $"{ ex.Message }; Entry: { person }";
+                var errMsg = $"{ ex.Message }; Entry: { newEntry }";
             }
 
             return true;
@@ -118,16 +117,16 @@ namespace Q90_HashTables
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Person GetById(int id)
+        public T GetById(int id)
         {
-            var bucket = new LinkedListNode<Tuple<int, Person>>(null);
+            var bucket = new LinkedListNode<Tuple<int, T>>(null);
             
             if (Find(id, ref bucket))
             {
                 return bucket.Value.Item2;
             }
 
-            return null;
+            return (T)(default);
         }
 
         /// <summary>
@@ -137,7 +136,7 @@ namespace Q90_HashTables
         /// <returns></returns>
         public bool Remove(int id)
         {
-            var bucket = new LinkedListNode<Tuple<int, Person>>(null);
+            var bucket = new LinkedListNode<Tuple<int, T>>(null);
 
             if (Find(id, ref bucket))
             {
@@ -154,7 +153,7 @@ namespace Q90_HashTables
         /// <param name="id"></param>
         /// <param name="bucket_node"></param>
         /// <returns></returns>
-        private bool Find(int id, ref LinkedListNode<Tuple<int, Person>> bucket_node)
+        private bool Find(int id, ref LinkedListNode<Tuple<int, T>> bucket_node)
         {
             int index = HashFunction(id);
             var bucket = table[index];
@@ -230,7 +229,7 @@ namespace Q90_HashTables
             int result = -1;
             
             //  1.  create a new List of type <Person>with a capacity of at least the number of initialized buckets
-            List<Person> NewList = new List<Person>(TotalRecords);
+            List<T> NewList = new List<T>(TotalRecords);
 
             //  2.  cycle through all LinkedLists with count > 0
             if (MoveTo(NewList, 0) < TotalRecords)
@@ -254,11 +253,11 @@ namespace Q90_HashTables
 
             try
             {
-                table = new List<LinkedList<Tuple<int, Person>>>(newBucketCount);
+                table = new List<LinkedList<Tuple<int, T>>>(newBucketCount);
                 InitializeBuckets();
                 foreach (var item in NewList)
                 {
-                    if (this.AddPerson(item))
+                    if (this.AddEntry(item))
                     {
                         //  5.  update LoadedBuckets property upon successful data load events (happens in AddPerson method)
                     }
@@ -290,7 +289,7 @@ namespace Q90_HashTables
         /// <param name="resultingList"></param>
         /// <param name="startIndex"></param>
         /// <returns></returns>
-        public int MoveTo(List<Person> resultingList, int startIndex)
+        public int MoveTo(List<T> resultingList, int startIndex)
         {
             var itemsAffected = 0;
 

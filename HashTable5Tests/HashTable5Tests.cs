@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using HashTable5;
 
-namespace Q90_HashTables.Tests
+namespace HashTable5Tests.Tests
 {
     [TestClass()]
     public class HashTable5Tests
@@ -13,17 +14,17 @@ namespace Q90_HashTables.Tests
         [TestMethod()]
         public void DefaultCTOR_Test()
         {
-            var expectedResult = "HashTable5";
+            var expectedResult = "HashTable5`1";
             var expectedLFSet = true;
 
-            var ht5 = new HashTable5();
+            var ht5 = new HashTable5<Person>();
             var actualResult = ht5.GetType().Name;
             var actualLFSet = (ht5.LoadFactorLimit > 0 && ht5.LoadFactorLimit < 1);
 
             DisplayDigitalResults(new List<Tuple<string, float>>
             {
-                new Tuple<string, float>("Expected TableLoadFactor will be between 0 and 1. Dummy entry", 0.0f),
-                new Tuple<string, float>("Actual TableLoadFactor setting", ht5.LoadFactorLimit)
+                new Tuple<string, float>("Expected TableLoadFactor will be between 0 and 1. Actual:", ht5.LoadFactorLimit),
+                new Tuple<string, float>($"Expected Type Name: HashTable5`1. Actual: { actualResult }", 0.0f)
             }
             );
             Assert.AreEqual(expectedResult, actualResult);
@@ -33,16 +34,16 @@ namespace Q90_HashTables.Tests
         [TestMethod()]
         public void SingleArgCTOR_Test()
         {
-            var expectedResult = "HashTable5";
+            var expectedResult = "HashTable5`1";
             var expectedLF = 0.8f;
 
-            var ht5 = new HashTable5(expectedLF);
+            var ht5 = new HashTable5<Person>(expectedLF);
             var actualResult = ht5.GetType().Name;
             var actualLFSetting = ht5.LoadFactorLimit;
 
             DisplayDigitalResults(new List<Tuple<string, float>>
             {
-                new Tuple<string, float>("Expected TableLoadFactor will be between 0 and 1. Dummy entry", 0.0f),
+                new Tuple<string, float>($"Expected Type Name: HashTable5`1. Actual: { actualResult }", 0.0f),
                 new Tuple<string, float>("Actual TableLoadFactor setting", actualLFSetting)
             }
             );
@@ -54,11 +55,11 @@ namespace Q90_HashTables.Tests
         [TestMethod()]
         public void TwoArgCTOR_Test()
         {
-            var expectedResult = "HashTable5";
+            var expectedResult = "HashTable5`1";
             var expectedLF = 0.8f;
             var expectedCapacity = 5;
 
-            var ht5 = new HashTable5(expectedCapacity, expectedLF);
+            var ht5 = new HashTable5<Person>(expectedCapacity, expectedLF);
             var actualResult = ht5.GetType().Name;
             var actualLFSetting = ht5.LoadFactorLimit;
             var actualCapacity = ht5.table.Capacity;
@@ -83,8 +84,8 @@ namespace Q90_HashTables.Tests
             var expectedLoadedBucketCount = 1;
             var expectedTotalRecords = 1;
 
-            var ht5 = new HashTable5();
-            var actualAddPersonResult = ht5.AddPerson(new Person(1, "fn", "ln", "e@mail.ext"));
+            var ht5 = new HashTable5<Person>();
+            var actualAddPersonResult = ht5.AddEntry(new Person(1, "fn", "ln", "e@mail.ext"));
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
 
@@ -101,13 +102,37 @@ namespace Q90_HashTables.Tests
         }
 
         [TestMethod()]
+        public void AddOtherType_Test()
+        {
+            var expectedAddObjectResult = true;
+            var expectedLoadedBucketCount = 1;
+            var expectedTotalRecords = 1;
+
+            var ht5 = new HashTable5<TestObject>();
+            var actualAddObjectResult = ht5.AddEntry(new TestObject(1, new object() { }));
+            var actualLoadedBucketCount = ht5.LoadedBucketCount;
+            var actualTotalRecords = ht5.TotalRecords;
+
+            DisplayDigitalResults(new List<Tuple<string, float>>
+            {
+                new Tuple<string, float>("Actual loaded bucket count", actualLoadedBucketCount),
+                new Tuple<string, float>("Actual total records", actualTotalRecords)
+            }
+            );
+
+            Assert.AreEqual(expectedAddObjectResult, actualAddObjectResult);
+            Assert.AreEqual(expectedLoadedBucketCount, actualLoadedBucketCount);
+            Assert.AreEqual(expectedTotalRecords, actualTotalRecords);
+        }
+
+        [TestMethod()]
         public void AddLotsOfPersons_Test()
         {
             var expectedAddPersonResult = 8;
             var expectedLoadedBucketCount = 8;
             var expectedTotalRecords = 8;
 
-            var ht5 = new HashTable5(20, 0.8f);
+            var ht5 = new HashTable5<Person>(20, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -126,6 +151,31 @@ namespace Q90_HashTables.Tests
         }
 
         [TestMethod()]
+        public void AddLotsOfAnotherType_Test()
+        {
+            var expectedAddObjectsResult = 16;
+            var expectedLoadedBucketCount = 16;
+            var expectedTotalRecords = 16;
+
+            var ht5 = new HashTable5<TestObject>(expectedAddObjectsResult, 0.8f);
+            var actualAddObjectsResult = LoadLotsOfTestObjects(ht5, 16);
+            var actualLoadedBucketCount = ht5.LoadedBucketCount;
+            var actualTotalRecords = ht5.TotalRecords;
+
+            DisplayDigitalResults(new List<Tuple<string, float>>
+            {
+                new Tuple<string, float>("actualAddObjectsResult", actualAddObjectsResult),
+                new Tuple<string, float>("actualLoadedBucketCount", actualLoadedBucketCount),
+                new Tuple<string, float>("actualTotalRecords", actualTotalRecords)
+            }
+            );
+
+            Assert.AreEqual(expectedAddObjectsResult, actualAddObjectsResult);
+            Assert.AreEqual(expectedLoadedBucketCount, actualLoadedBucketCount);
+            Assert.AreEqual(expectedTotalRecords, actualTotalRecords);
+        }
+
+        [TestMethod()]
         public void GetById_Test()
         {
             var idToFind = 5;
@@ -134,7 +184,7 @@ namespace Q90_HashTables.Tests
             var expectedTotalRecords = 8;
             var PersonToFind = new Person(5, "Ean", "Echo", "Ean@Echo.net");
 
-            var ht5 = new HashTable5(20, 0.8f);
+            var ht5 = new HashTable5<Person>(20, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -166,7 +216,7 @@ namespace Q90_HashTables.Tests
             var expectedLoadedBucketCount = 8;
             var expectedTotalRecords = 8;
 
-            var ht5 = new HashTable5(20, 0.8f);
+            var ht5 = new HashTable5<Person>(20, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -201,7 +251,7 @@ namespace Q90_HashTables.Tests
             var expectedClearedBucketCount = 0;
             var expectedCLearedRecordsCount = 0;
 
-            var ht5 = new HashTable5(20, 0.8f);
+            var ht5 = new HashTable5<Person>(20, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -243,7 +293,7 @@ namespace Q90_HashTables.Tests
         [TestMethod()]
         public void MoveTo_Test()
         {
-            var ht5 = new HashTable5(8, 1);
+            var ht5 = new HashTable5<Person>(8, 1);
             var addPeopleResult = LoadInitialPeople(ht5);
 
             var expectedEndCount = 4;
@@ -280,7 +330,7 @@ namespace Q90_HashTables.Tests
             var expectedLoadedBucketCount = 8;
             var expectedTotalRecords = 8;
 
-            var ht5 = new HashTable5(8, 0.8f);
+            var ht5 = new HashTable5<Person>(8, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -357,7 +407,7 @@ namespace Q90_HashTables.Tests
             var expectedTotalRecords = 8;
             var expectedAvgBucketsLF = 0.0f;
 
-            var ht5 = new HashTable5(10, 0.8f);
+            var ht5 = new HashTable5<Person>(10, 0.8f);
             var actualAddPersonResult = LoadInitialPeople(ht5);
             var actualLoadedBucketCount = ht5.LoadedBucketCount;
             var actualTotalRecords = ht5.TotalRecords;
@@ -438,7 +488,7 @@ namespace Q90_HashTables.Tests
             //  1.  find a LARGE text file of People objects that can be loaded into this test project in chunks
             //  check out mockaroo
             //  2.  set the initial table size to 5 and LF to 80%
-            var ht5 = new HashTable5(5, 0.8f);
+            var ht5 = new HashTable5<Person>(5, 0.8f);
 
             //  3.  load about 80 records (bucketLFLimit default is 18)
             var fileName = "onehundredpeople.json";
@@ -546,7 +596,7 @@ namespace Q90_HashTables.Tests
 
         }
 
-        private static bool BulkLoadPeople<T>(List<T> people, HashTable5 hashTable, int startIndex, int endIndex)
+        private static bool BulkLoadPeople<T>(List<T> people, HashTable5<Person> hashTable, int startIndex, int endIndex)
         {
             startIndex = startIndex < 0 ? 0 : startIndex;
             startIndex = startIndex >= people.Count ? people.Count - 1 : startIndex;
@@ -565,25 +615,33 @@ namespace Q90_HashTables.Tests
                     LastName = jtp.LastName,
                     Email = jtp.Email
                 };
-                hashTable.AddPerson(p);
+                hashTable.AddEntry(p);
             }
             return true;
         }
 
-        private static int LoadInitialPeople(HashTable5 hashtable)
+        private static int LoadInitialPeople(HashTable5<Person> hashtable)
         {
-            hashtable.AddPerson(new Person(1, "Abe", "Alpha", "Abe@Alpha.com"));
-            hashtable.AddPerson(new Person(2, "Barb", "Bravo", "Barb@Bravo.net"));
-            hashtable.AddPerson(new Person(3, "Chuck", "Charlie", "Chuck@Charlie.org"));
-            hashtable.AddPerson(new Person(4, "Dan", "Delta", "Dano@Delta.com"));
-            hashtable.AddPerson(new Person(5, "Ean", "Echo", "Ean@Echo.net"));
-            hashtable.AddPerson(new Person(6, "Frank", "Foxtrot", "Frank@Foxtrot.org"));
-            hashtable.AddPerson(new Person(7, "George", "Golf", "George@golfers.net"));
-            hashtable.AddPerson(new Person(8, "Henry", "Hotel", "Henry@Hotel.com"));
+            hashtable.AddEntry(new Person(1, "Abe", "Alpha", "Abe@Alpha.com"));
+            hashtable.AddEntry(new Person(2, "Barb", "Bravo", "Barb@Bravo.net"));
+            hashtable.AddEntry(new Person(3, "Chuck", "Charlie", "Chuck@Charlie.org"));
+            hashtable.AddEntry(new Person(4, "Dan", "Delta", "Dano@Delta.com"));
+            hashtable.AddEntry(new Person(5, "Ean", "Echo", "Ean@Echo.net"));
+            hashtable.AddEntry(new Person(6, "Frank", "Foxtrot", "Frank@Foxtrot.org"));
+            hashtable.AddEntry(new Person(7, "George", "Golf", "George@golfers.net"));
+            hashtable.AddEntry(new Person(8, "Henry", "Hotel", "Henry@Hotel.com"));
             return 8;
         }
+        private static int LoadLotsOfTestObjects(HashTable5<TestObject> hashtable, int howManyToLoad)
+        {
+            for (int idx=1; idx <= howManyToLoad; idx++)
+            {
+                hashtable.AddEntry(new TestObject(idx, new object() { }));
+            }
+            return hashtable.TotalRecords;
+        }
 
-        private static int LoadMorePeople(int pId, HashTable5 hashtable)
+        private static int LoadMorePeople(int pId, HashTable5<Person> hashtable)
         {
             if (pId < 0)
             {
@@ -591,25 +649,25 @@ namespace Q90_HashTables.Tests
             }
 
             pId++;
-            hashtable.AddPerson(new Person(pId, "Indeo", "India", "Indeo@India.in"));
+            hashtable.AddEntry(new Person(pId, "Indeo", "India", "Indeo@India.in"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Joey", "Juliet", "Joey@Juliette.net"));
+            hashtable.AddEntry(new Person(pId, "Joey", "Juliet", "Joey@Juliette.net"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Kelli", "Kilo", "Kelli@Kilo.com"));
+            hashtable.AddEntry(new Person(pId, "Kelli", "Kilo", "Kelli@Kilo.com"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Larry", "Lima", "Larry@Lima.org"));
+            hashtable.AddEntry(new Person(pId, "Larry", "Lima", "Larry@Lima.org"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Mikey", "Mike", "MikeyMike@email.net"));
+            hashtable.AddEntry(new Person(pId, "Mikey", "Mike", "MikeyMike@email.net"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Noah", "November", "November@Noah.net"));
+            hashtable.AddEntry(new Person(pId, "Noah", "November", "November@Noah.net"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Ollie", "Oscar", "Ollie@Grouch.com"));
+            hashtable.AddEntry(new Person(pId, "Ollie", "Oscar", "Ollie@Grouch.com"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Pete", "Papa", "PapaPete@Email.org"));
+            hashtable.AddEntry(new Person(pId, "Pete", "Papa", "PapaPete@Email.org"));
             return pId;
         }
 
-        private static int LoadEvenMorePeople(int pId, HashTable5 hashtable)
+        private static int LoadEvenMorePeople(int pId, HashTable5<Person> hashtable)
         {
             if (pId < 0)
             {
@@ -617,25 +675,25 @@ namespace Q90_HashTables.Tests
             }
 
             pId++;
-            hashtable.AddPerson(new Person(pId, "Quixote", "Quebec", "Quixote@Quebec.co"));
+            hashtable.AddEntry(new Person(pId, "Quixote", "Quebec", "Quixote@Quebec.co"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Roger", "Roger", "Rog@RogerRoger.net"));
+            hashtable.AddEntry(new Person(pId, "Roger", "Roger", "Rog@RogerRoger.net"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Wilson", "Sierra", "Sierra.Wilson@Seahawks.com"));
+            hashtable.AddEntry(new Person(pId, "Wilson", "Sierra", "Sierra.Wilson@Seahawks.com"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Thom", "Tango", "Tango.Tom@Dancers.info"));
+            hashtable.AddEntry(new Person(pId, "Thom", "Tango", "Tango.Tom@Dancers.info"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Udo", "Union", "Udo@Union.dk"));
+            hashtable.AddEntry(new Person(pId, "Udo", "Union", "Udo@Union.dk"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Victor", "Victoria", "VV@Victoria.co.uk"));
+            hashtable.AddEntry(new Person(pId, "Victor", "Victoria", "VV@Victoria.co.uk"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Willy", "Whisky", "Willy@Wisky.org"));
+            hashtable.AddEntry(new Person(pId, "Willy", "Whisky", "Willy@Wisky.org"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Xavier", "Xray", "Xavier@xray.org"));
+            hashtable.AddEntry(new Person(pId, "Xavier", "Xray", "Xavier@xray.org"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Yanni", "Yankee", "Yanni@Yank.us"));
+            hashtable.AddEntry(new Person(pId, "Yanni", "Yankee", "Yanni@Yank.us"));
             pId++;
-            hashtable.AddPerson(new Person(pId, "Zanzi", "Zulu", "Zanzi.Zulu@ZeroHour.net"));
+            hashtable.AddEntry(new Person(pId, "Zanzi", "Zulu", "Zanzi.Zulu@ZeroHour.net"));
             return pId;
         }
 
